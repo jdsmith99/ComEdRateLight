@@ -50,10 +50,12 @@ namespace ComEdRateLight
             High,
             Medium,
             Low,
+            Negative,
             Error
         }
 
         private LedState _ledState = new LedState();
+        private double _currentPrice = 0.0;
 
         private DateTime _lastLoop;
 
@@ -119,11 +121,17 @@ namespace ComEdRateLight
         private async Task LightLED(CancellationToken cancel)
         {
 
+            int ledDelay = 400;
+            int ledBlinks = 3;
+
             while (true)
             {
                 try
                 {
                     Color ledColor;
+                    ledDelay = 400;
+                    ledBlinks = 3;
+
                     // Light LED
                     if (led != null)
                     {
@@ -143,6 +151,9 @@ namespace ComEdRateLight
                             {
                                 case LedState.Low:
                                     ledColor = Colors.Green;
+                                    ledBlinks = Convert.ToInt32(_currentPrice);
+                                    if (ledBlinks == 0)
+                                        ledBlinks = 1;
                                     break;
                                 case LedState.Medium:
                                     ledColor = customYellow;
@@ -150,17 +161,25 @@ namespace ComEdRateLight
                                     break;
                                 case LedState.High:
                                     ledColor = Colors.Red;
+                                    ledBlinks = Convert.ToInt32(_currentPrice / 3);
                                     break;
                                 case LedState.Ultra:
                                     ledColor = Colors.Blue;
                                     break;
+                                case LedState.Negative:
+                                    ledColor = Colors.Green;
+                                    ledBlinks = 7;
+                                    ledDelay = 200;
+                                    break;
                                 default:
                                     ledColor = Colors.Black;
                                     break;
-
                             }
                             if (ledColor != null)
-                                await BlinkLed(led, 3, 400, ledColor);
+                            {
+                                await BlinkLed(led, ledBlinks, ledDelay, ledColor);
+                            }
+
 
                         }
                         else
@@ -318,6 +337,7 @@ namespace ComEdRateLight
                         if (double.TryParse(priceItem.price, out intPrice))
                         {
                             System.Diagnostics.Debug.WriteLine(String.Format("Price: {0} at time: {1}", priceItem.price, priceItem.millisUTC));
+                            _currentPrice = intPrice; 
 
                             if (intPrice >= ULTRA_PRICE)
                             {
@@ -330,6 +350,10 @@ namespace ComEdRateLight
                             else if (intPrice >= WARN_PRICE)
                             {
                                 _localLedState = LedState.Medium;
+                            }
+                            else if (intPrice <= 0 )
+                            {
+                                _localLedState = LedState.Negative;
                             }
                             else
                             {

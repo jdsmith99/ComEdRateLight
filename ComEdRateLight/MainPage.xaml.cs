@@ -157,14 +157,16 @@ namespace ComEdRateLight
                                     break;
                                 case LedState.Medium:
                                     ledColor = customYellow;
+                                    ledBlinks = Convert.ToInt32(_currentPrice);
                                     //ledColor = Colors.Yellow;
                                     break;
                                 case LedState.High:
                                     ledColor = Colors.Red;
-                                    ledBlinks = Convert.ToInt32(_currentPrice / 3);
+                                    ledBlinks = Convert.ToInt32(_currentPrice / 2);
                                     break;
                                 case LedState.Ultra:
                                     ledColor = Colors.Blue;
+                                    ledBlinks = Convert.ToInt32(_currentPrice / 10);
                                     break;
                                 case LedState.Negative:
                                     ledColor = Colors.Green;
